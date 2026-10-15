@@ -1,0 +1,109 @@
+// Theme (shared)
+(function initTheme() {
+  const saved = localStorage.getItem('pts-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+})();
+
+// Auth logic — Prime Trader Solution
+let pendingEmail = '', pendingPassword = '', pendingUsername = '', pendingQuotexId = '';
+
+function showError(msg) {
+  document.getElementById('authError').textContent = msg;
+}
+
+async function googleSignup() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + '/pages/signup.html?google=1' }
+  });
+  if (error) showError(error.message);
+}
+
+async function sendOTP() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const username = document.getElementById('username').value.trim();
+
+  if (!email || !password || !username) return showError('Please fill all required fields');
+  if (password.length < 6) return showError('Password must be at least 6 characters');
+
+  pendingEmail = email; pendingPassword = password;
+  pendingUsername = username; pendingQuotexId = quotexId;
+
+  // Send OTP via Supabase Auth
+  const { error } = await supabase.auth.signInWithOtp({ email });
+  if (error) return showError(error.message);
+
+  document.getElementById('step1').style.display = 'none';
+  document.getElementById('step2').style.display = 'block';
+  showError('');
+}
+
+function backToStep1() {
+  document.getElementById('step2').style.display = 'none';
+  document.getElementById('step1').style.display = 'block';
+}
+
+async function verifyOTP() {
+  const otp = document.getElementById('otp').value.trim();
+  if (otp.length !== 6) return showError('Enter the 6-digit code');
+
+  // Verify OTP
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: pendingEmail, token: otp, type: 'email'
+  });
+  if (error) return showError(error.message);
+
+  // Create profile (pending approval)
+  const { error: pErr } = await supabase.from('profiles').insert({
+    id: data.user.id,
+    email: pendingEmail,
+    username: pendingUsername,
+    status: 'pending',
+    deposit_verified: false
+  });
+  if (pErr) return showError(pErr.message);
+
+  document.getElementById('step2').style.display = 'none';
+  document.getElementById('step3').style.display = 'block';
+  showError('');
+}
+
+async function submitVerification() {
+  const quotexId = document.getElementById('quotexId').value.trim();
+  const depositAmt = document.getElementById('depositAmt').value.trim();
+  const note = document.getElementById('verifyNote').value.trim();
+  if (!quotexId) return showError('⚠️ Quotex Account ID is required!');
+  if (!depositAmt || +depositAmt < 50) return showError('⚠️ Minimum $50 deposit required!');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    await supabase.from('profiles').update({
+      quotex_id: quotexId,
+      deposit_amount: +depositAmt,
+      verification_note: note || null
+    }).eq('id', user.id);
+  }
+  document.getElementById('step3').style.display = 'none';
+  document.getElementById('step4').style.display = 'block';
+  showError('');
+}
+
+async function doLogin() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  if (!email || !password) return showError('Enter email and password');
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return showError(error.message);
+
+  // Check approval status
+  const { data: profile } = await supabase.from('profiles').select('status,is_admin').eq('id', data.user.id).single();
+
+  if (!profile) return showError('Profile not found. Please sign up.');
+  if (profile.status === 'pending') return showError('⏳ Account under review. Please wait for approval.');
+  if (profile.status === 'blocked') return showError('🚫 Account blocked. Contact support.');
+  if (profile.status === 'rejected') return showError('❌ Application rejected.');
+
+  // Redirect
+  window.location.href = profile.is_admin ? 'admin.html' : 'dashboard.html';
+}

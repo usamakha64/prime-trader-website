@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Prime Trader Solution</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/auth.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo"><img src="../assets/logo-small.webp" alt="PTS" style="width:32px;height:32px;border-radius:8px;vertical-align:middle"> Prime Trader <span class="gold">Solution</span></div>
+    <h2>Welcome Back</h2>
+    <p class="auth-sub">Login to your trading dashboard</p>
+    <button class="btn btn-ghost btn-lg auth-btn" onclick="googleSignup()" style="display:flex;align-items:center;justify-content:center;gap:.6rem">
+      <span style="font-size:1.2rem">G</span> Continue with Google
+    </button>
+    <div style="text-align:center;color:var(--muted);margin:1rem 0">— or —</div>
+    <input type="email" id="email" placeholder="Email address" class="auth-input">
+    <input type="password" id="password" placeholder="Password" class="auth-input">
+    <button class="btn btn-gold btn-lg auth-btn" onclick="doLogin()">Login →</button>
+    <p class="auth-footer">Don't have an account? <a href="signup.html">Join Now</a></p>
+    <p id="authError" class="auth-error"></p>
+  </div>
+</div>
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
+</body>
+</html>

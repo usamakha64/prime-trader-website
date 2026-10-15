@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Prime Trader Solution</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/auth.css">
+<link rel="stylesheet" href="../css/admin.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="dash-layout">
+  <aside class="sidebar">
+    <div class="side-logo">🔧 Admin Panel</div>
+    <nav class="side-nav">
+      <a href="#" class="side-link active" data-tab="dashboard">📊 Dashboard</a>
+      <a href="#" class="side-link" data-tab="users">👥 Users</a>
+      <a href="#" class="side-link" data-tab="signals">📡 Signals</a>
+      <a href="#" class="side-link" data-tab="giveaways">🎁 Giveaways</a>
+      <a href="#" class="side-link" data-tab="ytgive">📺 YT Giveaway</a>
+      <a href="#" class="side-link" data-tab="mentorship">🎓 Mentorship</a>
+      <a href="#" class="side-link" data-tab="dms">💬 Messages</a>
+      <a href="#" class="side-link" data-tab="broadcast">📢 Broadcast</a>
+      <a href="#" class="side-link" data-tab="audit">📋 Audit Log</a>
+    </nav>
+    <button class="btn btn-ghost side-logout" onclick="doLogout()">Logout</button>
+  </aside>
+  <main class="dash-main">
+    <div class="dash-header">
+      <h1 id="tabTitle">📊 Dashboard</h1>
+      <button class="btn btn-ghost theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+    </div>
+
+    <!-- DASHBOARD OVERVIEW -->
+    <div class="tab-pane active" id="tab-dashboard">
+      <div class="adm-stats" id="dashStats"></div>
+      <div class="card">
+        <h3>🤖 Bot Status</h3>
+        <div id="dashBotStatus"></div>
+      </div>
+      <div class="card">
+        <h3>⚡ Quick Actions</h3>
+        <div style="display:flex;gap:.8rem;flex-wrap:wrap">
+          <button class="btn btn-gold btn-sm" onclick="switchTab('users')">👥 Review Users</button>
+          <button class="btn btn-gold btn-sm" onclick="switchTab('signals')">📡 View Signals</button>
+          <button class="btn btn-ghost btn-sm" onclick="switchTab('broadcast')">📢 Broadcast</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="tab-pane" id="tab-users">
+      <div class="adm-stats" id="userStats"></div>
+      <div class="card">
+        <h3>⏳ Pending Approvals</h3>
+        <div class="bulk-bar" id="bulkBar" style="display:none">
+          <span id="bulkCount">0 selected</span>
+          <button class="btn btn-gold btn-sm" onclick="bulkApprove()">✅ Approve Selected</button>
+          <button class="btn btn-ghost btn-sm" onclick="bulkReject()">❌ Reject Selected</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearSelection()">Clear</button>
+        </div>
+        <div id="pendingUsers"></div>
+      </div>
+      <div class="card"><h3>👥 All Users</h3><div id="allUsers"></div></div>
+    </div>
+
+    <!-- SIGNALS (BOT) -->
+    <div class="tab-pane" id="tab-signals">
+      <div class="card">
+        <h3>🤖 Bot Status</h3>
+        <div class="bot-status">
+          <div class="bot-dot" id="botDot"></div>
+          <div class="bot-info">
+            <b id="botConnText">Checking...</b>
+            <small id="botConnSub">Strategy: 7-indicator (EMA 9/21/50 · RSI 14 · ADX 14 · ATR 14 · BB 20,2)</small>
+          </div>
+          <div class="toggle-wrap">
+            <span class="toggle-label">Auto-publish</span>
+            <div class="toggle on" id="tglAutoPublish" onclick="toggleSetting('autoPublish')"></div>
+          </div>
+          <div class="toggle-wrap">
+            <span class="toggle-label">Auto-settle</span>
+            <div class="toggle on" id="tglAutoSettle" onclick="toggleSetting('autoSettle')"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:.8rem;flex-wrap:wrap">
+          <button class="btn btn-gold btn-sm" onclick="refreshBotStatus()">🔄 Refresh Status</button>
+          <button class="btn btn-ghost btn-sm" onclick="notifySsidExpiry()">📩 Notify SSID Expiry</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Today's Session</h3>
+        <div class="session-grid" id="sessionSummary"></div>
+        <button class="btn btn-gold btn-sm" onclick="broadcastSession()">📢 Broadcast Summary to Telegram</button>
+      </div>
+
+      <div class="card">
+        <h3>📡 Live Bot Signals</h3>
+        <div class="filter-row" id="sigFilters">
+          <button class="filter-btn active" data-f="today" onclick="setSigFilter('today')">Today</button>
+          <button class="filter-btn" data-f="week" onclick="setSigFilter('week')">This Week</button>
+          <button class="filter-btn" data-f="all" onclick="setSigFilter('all')">All</button>
+          <button class="filter-btn" data-f="open" onclick="setSigFilter('open')">Open</button>
+          <button class="filter-btn" data-f="win" onclick="setSigFilter('win')">Wins</button>
+          <button class="filter-btn" data-f="loss" onclick="setSigFilter('loss')">Losses</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="sig-table">
+            <thead><tr><th>Time</th><th>Asset</th><th>Dir</th><th>Conf</th><th>Source</th><th>Status</th><th>P&L</th><th>Action</th></tr></thead>
+            <tbody id="botSignalsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="collapse-head" onclick="toggleCollapse('manualSig')">
+          <h3>✏️ Manual Signal (fallback)</h3>
+          <span class="collapse-arrow">▼</span>
+        </div>
+        <div class="collapse-body" id="manualSig">
+          <div class="form-row">
+            <input id="sAsset" placeholder="Asset" class="auth-input">
+            <select id="sDir" class="auth-input"><option>CALL</option><option>PUT</option></select>
+            <input id="sConf" type="number" placeholder="Confidence %" class="auth-input">
+          </div>
+          <button class="btn btn-gold" onclick="publishSignal()" style="margin-top:.8rem">Publish Signal 📡</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GIVEAWAYS -->
+    <div class="tab-pane" id="tab-giveaways">
+      <div class="card">
+        <h3>➕ Create Giveaway</h3>
+        <input id="gTitle" placeholder="Title" class="auth-input">
+        <input id="gQ" placeholder="Question (e.g. Next EURUSD candle GREEN or RED?)" class="auth-input">
+        <div class="form-row">
+          <input id="gAsset" placeholder="Asset" class="auth-input">
+          <input id="gPrize" type="number" placeholder="Prize pool $" class="auth-input">
+          <input id="gTime" type="datetime-local" class="auth-input">
+        </div>
+        <button class="btn btn-gold" onclick="createGiveaway()" style="margin-top:.8rem">Create 🎁</button>
+      </div>
+      <div class="card">
+        <h3>🎁 Giveaways — Resolve Winners</h3>
+        <div id="adminGiveaways"></div>
+      </div>
+      <div class="card">
+        <h3>🎰 Deposit Bonus Spin</h3>
+        <div class="toggle-wrap" style="margin-bottom:1rem">
+          <span class="toggle-label">Spin Enabled</span>
+          <div class="toggle" id="tglSpin" onclick="toggleSpin()"></div>
+        </div>
+        <div class="form-row">
+          <input id="spinMax" type="number" placeholder="Max spins/user/day" class="auth-input">
+          <button class="btn btn-gold btn-sm" onclick="saveSpinConfig()">Save</button>
+        </div>
+        <h4 style="margin:1rem 0 .5rem">Recent Spins</h4>
+        <div id="spinHistory"></div>
+      </div>
+    </div>
+
+    <!-- YT GIVEAWAY -->
+    <div class="tab-pane" id="tab-ytgive">
+      <div class="card">
+        <h3>➕ Create YouTube Giveaway</h3>
+        <input id="ytTitle" placeholder="Title" class="auth-input">
+        <input id="ytUrl" placeholder="YouTube video URL" class="auth-input">
+        <input id="ytPrize" type="number" placeholder="Prize USDT" class="auth-input">
+        <button class="btn btn-gold" onclick="createYT()" style="margin-top:.8rem">Create 📺</button>
+      </div>
+      <div class="card">
+        <h3>📺 YT Giveaways — Resolve Winners</h3>
+        <div id="adminYT"></div>
+      </div>
+    </div>
+
+    <!-- MENTORSHIP -->
+    <div class="tab-pane" id="tab-mentorship">
+      <div class="card">
+        <h3>🎓 Pending Applications <small style="color:var(--muted)">($125 / 30 days)</small></h3>
+        <div id="mentorApps"></div>
+      </div>
+    </div>
+
+    <!-- DMS -->
+    <div class="tab-pane" id="tab-dms">
+      <div class="card"><h3>💬 User Messages</h3><div id="dmThreads"></div></div>
+      <div class="card" id="dmReplyCard" style="display:none">
+        <h3>Reply to <span id="dmUserName"></span></h3>
+        <div id="adminDMList" style="max-height:250px;overflow-y:auto;margin-bottom:1rem"></div>
+        <div style="display:flex;gap:.5rem">
+          <input id="adminDMInput" placeholder="Type reply..." class="auth-input" style="flex:1;margin:0">
+          <button class="btn btn-gold" onclick="replyDM()">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BROADCAST -->
+    <div class="tab-pane" id="tab-broadcast">
+      <div class="card">
+        <h3>📢 Send Broadcast</h3>
+        <div class="form-row" style="margin-bottom:.8rem">
+          <select id="bTarget" class="auth-input">
+            <option value="all">All Users</option>
+            <option value="approved">Approved Only</option>
+            <option value="telegram">Telegram Channel</option>
+            <option value="both">App + Telegram</option>
+          </select>
+        </div>
+        <input id="bTitle" placeholder="Title" class="auth-input">
+        <textarea id="bMsg" placeholder="Message (supports basic formatting)" class="auth-input" rows="4" oninput="previewBroadcast()"></textarea>
+        <div class="tg-preview" id="tgPreview" style="display:none">
+          <div class="tg-head">📢 Prime Trader Solution</div>
+          <div class="tg-body" id="tgPreviewBody"></div>
+        </div>
+        <div style="display:flex;gap:.8rem;margin-top:1rem">
+          <button class="btn btn-gold" onclick="sendBroadcast()">Send →</button>
+          <button class="btn btn-ghost" onclick="previewBroadcast()">👁 Preview</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT -->
+    <div class="tab-pane" id="tab-audit">
+      <div class="card">
+        <h3>📋 Audit Log</h3>
+        <div class="filter-row">
+          <input id="auditSearch" placeholder="Search actions..." class="auth-input" style="max-width:260px" oninput="filterAudit()">
+        </div>
+        <div id="auditList"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- USER DETAIL MODAL -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('userModal')">✕</button>
+    <h3>👤 User Details</h3>
+    <div id="userModalBody"></div>
+    <div class="modal-actions" id="userModalActions"></div>
+  </div>
+</div>
+
+<!-- WINNER MODAL -->
+<div class="modal-overlay" id="winnerModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('winnerModal')">✕</button>
+    <h3>🏆 Pick Winner</h3>
+    <div class="winner-row">
+      <input id="winnerName" placeholder="Winner username" class="auth-input">
+      <button class="btn btn-gold" onclick="confirmWinner()">Confirm 🏆</button>
+    </div>
+    <div id="winnerEntries" style="margin-top:1rem"></div>
+  </div>
+</div>
+
+<!-- MENTORSHIP DETAIL MODAL -->
+<div class="modal-overlay" id="mentorModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('mentorModal')">✕</button>
+    <h3>🎓 Mentorship Application</h3>
+    <div id="mentorModalBody"></div>
+    <div class="modal-actions" id="mentorModalActions"></div>
+  </div>
+</div>
+
+<script src="../js/supabase.js"></script>
+<script src="../js/admin.js"></script>
+</body>
+</html>

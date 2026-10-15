@@ -1,0 +1,18 @@
+/* Auth pages */
+.auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; background: radial-gradient(ellipse at 50% 0%, rgba(245,185,66,.08), transparent 60%); }
+.auth-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 3rem; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,.5); animation: slideUp .6s ease; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.auth-logo { font-size: 1.4rem; font-weight: 800; text-align: center; margin-bottom: 1.5rem; }
+.auth-card h2 { text-align: center; margin-bottom: .5rem; }
+.auth-sub { text-align: center; color: var(--muted); margin-bottom: 2rem; }
+.auth-input { width: 100%; padding: 1rem; margin-bottom: 1rem; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-size: 1rem; font-family: inherit; transition: border .3s; }
+.auth-input:focus { outline: none; border-color: var(--gold); }
+.otp-input { text-align: center; font-size: 1.5rem; letter-spacing: .5rem; font-weight: 800; }
+.auth-btn { width: 100%; margin-bottom: 1rem; }
+.auth-footer { text-align: center; color: var(--muted); margin-top: 1rem; }
+.auth-footer a { color: var(--gold); text-decoration: none; font-weight: 600; }
+.auth-error { color: var(--red); text-align: center; margin-top: 1rem; font-size: .9rem; }
+.referral-box { background: rgba(245,185,66,.08); border: 1px solid rgba(245,185,66,.3); border-radius: 14px; padding: 1.2rem; margin-bottom: 1.2rem; text-align: center; }
+.referral-box p { margin: 0 0 .8rem; color: var(--text); }
+.referral-box .btn { margin-bottom: .8rem; }
+.referral-note { font-size: .85rem; color: var(--muted); margin: 0 !important; }

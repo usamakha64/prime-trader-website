@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Join — Prime Trader Solution</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/auth.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo"><img src="../assets/logo-small.webp" alt="PTS" style="width:32px;height:32px;border-radius:8px;vertical-align:middle"> Prime Trader <span class="gold">Solution</span></div>
+    <h2>Create Account</h2>
+    <p class="auth-sub">Join 12,500+ profitable traders</p>
+
+    <div id="step1">
+      <button class="btn btn-ghost btn-lg auth-btn" onclick="googleSignup()" style="display:flex;align-items:center;justify-content:center;gap:.6rem">
+        <span style="font-size:1.2rem">G</span> Continue with Google
+      </button>
+      <div style="text-align:center;color:var(--muted);margin:1rem 0">— or —</div>
+      <input type="email" id="email" placeholder="Email address" class="auth-input">
+      <input type="password" id="password" placeholder="Password (min 6 chars)" class="auth-input">
+      <input type="text" id="username" placeholder="Username" class="auth-input">
+      <button class="btn btn-gold btn-lg auth-btn" onclick="sendOTP()">Send Verification Code →</button>
+    </div>
+
+    <div id="step2" style="display:none">
+      <p class="auth-sub">Enter the 6-digit code sent to your email</p>
+      <input type="text" id="otp" placeholder="000000" maxlength="6" class="auth-input otp-input">
+      <button class="btn btn-gold btn-lg auth-btn" onclick="verifyOTP()">Verify & Create Account →</button>
+      <button class="btn btn-ghost auth-btn" onclick="backToStep1()">← Back</button>
+    </div>
+
+    <div id="step3" style="display:none">
+      <h3>🔓 Get Access</h3>
+      <p class="auth-sub">Submit your details to unlock everything:</p>
+      <div class="referral-box">
+        <p>📝 <strong>Don't have a Quotex account?</strong></p>
+        <a href="https://broker-qx.pro/sign-up/?lid=2392906" target="_blank" rel="noopener" class="btn btn-gold btn-sm">Create Quotex Account →</a>
+        <p class="referral-note">Use our link to create your account, then enter your ID below</p>
+      </div>
+      <input type="text" id="quotexId" placeholder="Quotex Account ID (e.g. 12345678)" class="auth-input">
+      <input type="number" id="depositAmt" placeholder="Deposit Amount (USD)" class="auth-input">
+      <input type="text" id="verifyNote" placeholder="Additional Note (optional)" class="auth-input">
+      <button class="btn btn-gold btn-lg auth-btn" onclick="submitVerification()">Submit for Verification →</button>
+    </div>
+
+    <div id="step4" style="display:none" class="text-center">
+      <div style="font-size:4rem">⏳</div>
+      <h3>Account Under Review</h3>
+      <p class="auth-sub">Our team will verify your deposit and approve your account within 24 hours.<br>You'll receive an email once approved.</p>
+      <a href="../index.html" class="btn btn-gold">Back to Home</a>
+    </div>
+
+    <p class="auth-footer">Already have an account? <a href="login.html">Login</a></p>
+    <p id="authError" class="auth-error"></p>
+  </div>
+</div>
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
+</body>
+</html>

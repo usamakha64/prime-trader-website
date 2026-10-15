@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Prime Trader Solution</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="dash-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="side-logo"><img src="../assets/logo-small.webp" alt="PTS" style="width:28px;height:28px;border-radius:7px;vertical-align:middle"> Prime Trader</div>
+    <nav class="side-nav">
+      <a href="#" class="side-link active" data-tab="signals">📡 Signals</a>
+      <a href="#" class="side-link" data-tab="journal">📊 Journal</a>
+      <a href="#" class="side-link" data-tab="leaderboard">🏆 Leaderboard</a>
+      <a href="#" class="side-link" data-tab="discipline">🎯 Discipline</a>
+      <a href="#" class="side-link" data-tab="giveaway">🎁 Giveaway</a>
+      <a href="#" class="side-link" data-tab="spin">🎡 Bonus Spin</a>
+      <a href="#" class="side-link" data-tab="ytgiveaway">📺 YT Giveaway</a>
+      <a href="#" class="side-link" data-tab="messages">💬 Messages</a>
+      <a href="#" class="side-link" data-tab="mentorship">🎓 Mentorship</a>
+    </nav>
+    <button class="btn btn-ghost side-logout" onclick="doLogout()">Logout</button>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="dash-main">
+    <div class="dash-header">
+      <h1 id="tabTitle">📡 Live Signals</h1>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <button class="btn btn-ghost theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+        <div class="user-badge" id="userBadge">👤</div>
+      </div>
+    </div>
+
+    <!-- SIGNALS TAB -->
+    <div class="tab-pane active" id="tab-signals">
+      <div class="signals-live" id="signalsLive"></div>
+    </div>
+
+    <!-- JOURNAL TAB -->
+    <div class="tab-pane" id="tab-journal">
+      <div class="journal-stats" id="journalStats"></div>
+      <div class="card">
+        <h3>➕ Add Trade</h3>
+        <div class="form-row">
+          <input id="jAsset" placeholder="Asset (e.g. EUR/USD)" class="auth-input">
+          <select id="jDir" class="auth-input"><option>CALL</option><option>PUT</option></select>
+        </div>
+        <div class="form-row">
+          <input id="jAmount" type="number" placeholder="Amount $" class="auth-input">
+          <select id="jResult" class="auth-input"><option>WIN</option><option>LOSS</option></select>
+        </div>
+        <input id="jNotes" placeholder="Notes (optional)" class="auth-input">
+        <button class="btn btn-gold" onclick="addJournalEntry()">Save Trade</button>
+      </div>
+      <div class="card"><h3>📝 Trade History</h3>
+        <div style="margin-bottom:1rem">
+          <label class="btn btn-ghost" style="cursor:pointer">📁 Import Quotex CSV <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="importCSV()"></label>
+        </div>
+        <div id="journalList"></div></div>
+    </div>
+
+    <!-- LEADERBOARD TAB -->
+    <div class="tab-pane" id="tab-leaderboard">
+      <div class="card"><h3>🏆 Profit Leaderboard</h3><div id="leaderboardList"></div></div>
+    </div>
+
+    <!-- DISCIPLINE TAB -->
+    <div class="tab-pane" id="tab-discipline">
+      <div class="card"><h3>🎯 Discipline Board</h3><p style="color:var(--muted);margin-bottom:1rem">Ranked by trading discipline — avoid overtrading & loss streaks to stay on top.</p><div id="disciplineList"></div></div>
+      <div class="card"><h3>📈 Your Score</h3><div id="myDiscipline"></div></div>
+    </div>
+
+    <!-- GIVEAWAY TAB -->
+    <div class="tab-pane" id="tab-giveaway">
+      <div class="card text-center" id="giveawayCard"><h3>🎁 Daily Giveaway</h3><p>Loading...</p></div>
+    </div>
+
+    <!-- SPIN TAB -->
+    <div class="tab-pane" id="tab-spin">
+      <div class="card text-center">
+        <h3>🎡 Daily Deposit Bonus Spin</h3>
+        <p style="color:var(--muted)">Spin once per day to win a deposit bonus!</p>
+        <div id="spinWheel" style="font-size:5rem;margin:1.5rem">🎡</div>
+        <div id="spinResult" style="font-size:1.3rem;font-weight:800;margin:1rem;min-height:2rem"></div>
+        <button class="btn btn-gold btn-lg" id="spinBtn" onclick="doSpin()">SPIN NOW →</button>
+        <p id="spinStatus" style="color:var(--muted);margin-top:1rem"></p>
+      </div>
+      <div class="card"><h3>🎁 Spin History</h3><div id="spinHistory"></div></div>
+    </div>
+
+    <!-- YT GIVEAWAY TAB -->
+    <div class="tab-pane" id="tab-ytgiveaway">
+      <div class="card" id="ytGiveawayCard"><h3>📺 YouTube Giveaway</h3><p>Loading...</p></div>
+    </div>
+
+    <!-- MESSAGES TAB -->
+    <div class="tab-pane" id="tab-messages">
+      <div class="card">
+        <h3>💬 Message Admin</h3>
+        <div id="dmList" style="max-height:300px;overflow-y:auto;margin-bottom:1rem"></div>
+        <div style="display:flex;gap:.5rem">
+          <input id="dmInput" placeholder="Type your message..." class="auth-input" style="flex:1;margin:0">
+          <button class="btn btn-gold" onclick="sendDM()">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MENTORSHIP TAB -->
+    <div class="tab-pane" id="tab-mentorship">
+      <div class="card text-center">
+        <h3>🎓 1-on-1 Mentorship</h3>
+        <div class="mentor-price"><span class="price">$125</span><span class="period">/30 days</span></div>
+        <p>Upload your payment screenshot to apply.</p>
+        <input type="file" id="payShot" accept="image/*" class="auth-input">
+        <button class="btn btn-gold btn-lg" onclick="applyMentorship()">Submit Application →</button>
+        <p id="mentorStatus"></p>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="../js/supabase.js"></script>
+<script src="../js/dashboard.js"></script>
+</body>
+</html>
