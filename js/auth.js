@@ -19,6 +19,29 @@ async function googleSignup() {
   if (error) showError(error.message);
 }
 
+// Block disposable/temporary email domains (like LegendJournal)
+const DISPOSABLE_DOMAINS = [
+  'mailinator.com','tempmail.com','guerrillamail.com','10minutemail.com','throwawaymail.com',
+  'yopmail.com','temp-mail.org','fakeinbox.com','getnada.com','maildrop.cc','trashmail.com',
+  'sharklasers.com','grr.la','guerrillamailblock.com','pokemail.net','spam4.me','bccto.me',
+  'chacuo.net','dispostable.com','mailnesia.com','mintemail.com','mytrashmail.com','sogetthis.com',
+  'soodonims.com','trashmail.net','trashymail.com','wegwerfmail.de','wegwerfmail.net',
+  'e4ward.com','gishpuppy.com','mailnull.com','spambox.us','whyspam.me','willselfdestruct.com',
+  'mailinator.net','mailinator2.com','tempmailo.com','tempail.com','emailondeck.com','mohmal.com',
+  'tempmailaddress.com','mail7.io','tmail.ws','inboxbear.com','moakt.com','tutanota.com'
+];
+function isDisposableEmail(email) {
+  const domain = (email.split('@')[1] || '').toLowerCase().trim();
+  if (!domain) return true;
+  if (DISPOSABLE_DOMAINS.includes(domain)) return true;
+  // block subdomains of known disposable providers
+  const parts = domain.split('.');
+  for (let i = 0; i < parts.length - 1; i++) {
+    if (DISPOSABLE_DOMAINS.includes(parts.slice(i).join('.'))) return true;
+  }
+  return false;
+}
+
 async function sendOTP() {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
@@ -26,6 +49,7 @@ async function sendOTP() {
 
   if (!email || !password || !username) return showError('Please fill all required fields');
   if (password.length < 6) return showError('Password must be at least 6 characters');
+  if (isDisposableEmail(email)) return showError('Temporary/disposable emails are not allowed. Please use a real email address.');
 
   pendingEmail = email; pendingPassword = password;
   pendingUsername = username; pendingQuotexId = quotexId;

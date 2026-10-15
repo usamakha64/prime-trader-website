@@ -1,5 +1,8 @@
 /* Admin Panel — LegendJournal parity + gold/dark premium theme */
 
+/* Fix: dashboard.css uses --border but style.css only defines --card-border */
+:root { --border: var(--card-border); }
+
 /* STAT CARDS (Dashboard overview) */
 .adm-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
 .adm-stat { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.2rem 1rem; text-align: center; transition: all .3s; position: relative; overflow: hidden; }
