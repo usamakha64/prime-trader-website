@@ -13,13 +13,16 @@ function showError(msg) {
 
 async function googleSignup() {
   try {
+    // Redirect based on current page: login page -> dashboard, signup page -> signup
+    const isLoginPage = window.location.pathname.includes('login.html');
+    const redirectPath = isLoginPage ? '/pages/dashboard.html' : '/pages/signup.html?google=1';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/pages/signup.html?google=1' }
+      options: { redirectTo: window.location.origin + redirectPath }
     });
     if (error) showError(error.message);
   } catch (e) {
-    showError('Google login is not enabled yet. Please use email & password.');
+    showError('Google login error: ' + (e.message || 'Please use email & password.'));
   }
 }
 
@@ -56,11 +59,16 @@ async function sendOTP() {
   if (isDisposableEmail(email)) return showError('Temporary/disposable emails are not allowed. Please use a real email address.');
 
   pendingEmail = email; pendingPassword = password;
-  pendingUsername = username; pendingQuotexId = quotexId;
+  pendingUsername = username;
+  try { pendingQuotexId = document.getElementById('quotexId').value.trim(); } catch (e) { pendingQuotexId = ''; }
 
-  // Send OTP via Supabase Auth
-  const { error } = await supabase.auth.signInWithOtp({ email });
-  if (error) return showError(error.message);
+  try {
+    // Send OTP via Supabase Auth
+    const { error } = await supabase.auth.signInWithOtp({ email });
+    if (error) return showError(error.message);
+  } catch (e) {
+    return showError('Failed to send code: ' + (e.message || 'Network error'));
+  }
 
   document.getElementById('step1').style.display = 'none';
   document.getElementById('step2').style.display = 'block';
@@ -76,21 +84,25 @@ async function verifyOTP() {
   const otp = document.getElementById('otp').value.trim();
   if (otp.length !== 6) return showError('Enter the 6-digit code');
 
-  // Verify OTP
-  const { data, error } = await supabase.auth.verifyOtp({
-    email: pendingEmail, token: otp, type: 'email'
-  });
-  if (error) return showError(error.message);
+  try {
+    // Verify OTP
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: pendingEmail, token: otp, type: 'email'
+    });
+    if (error) return showError(error.message);
 
-  // Create profile (pending approval)
-  const { error: pErr } = await supabase.from('profiles').insert({
-    id: data.user.id,
-    email: pendingEmail,
-    username: pendingUsername,
-    status: 'pending',
-    deposit_verified: false
-  });
-  if (pErr) return showError(pErr.message);
+    // Create profile (pending approval)
+    const { error: pErr } = await supabase.from('profiles').insert({
+      id: data.user.id,
+      email: pendingEmail,
+      username: pendingUsername,
+      status: 'pending',
+      deposit_verified: false
+    });
+    if (pErr) return showError(pErr.message);
+  } catch (e) {
+    return showError('Verification failed: ' + (e.message || 'Network error'));
+  }
 
   document.getElementById('step2').style.display = 'none';
   document.getElementById('step3').style.display = 'block';
@@ -103,13 +115,17 @@ async function submitVerification() {
   const note = document.getElementById('verifyNote').value.trim();
   if (!quotexId) return showError('⚠️ Quotex Account ID is required!');
   if (!depositAmt || +depositAmt < 50) return showError('⚠️ Minimum $50 deposit required!');
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    await supabase.from('profiles').update({
-      quotex_id: quotexId,
-      deposit_amount: +depositAmt,
-      verification_note: note || null
-    }).eq('id', user.id);
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('profiles').update({
+        quotex_id: quotexId,
+        deposit_amount: +depositAmt,
+        verification_note: note || null
+      }).eq('id', user.id);
+    }
+  } catch (e) {
+    return showError('Failed to save: ' + (e.message || 'Network error'));
   }
   document.getElementById('step3').style.display = 'none';
   document.getElementById('step4').style.display = 'block';
@@ -121,17 +137,21 @@ async function doLogin() {
   const password = document.getElementById('password').value;
   if (!email || !password) return showError('Enter email and password');
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return showError(error.message);
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return showError(error.message);
 
-  // Check approval status
-  const { data: profile } = await supabase.from('profiles').select('status,is_admin').eq('id', data.user.id).single();
+    // Check approval status
+    const { data: profile } = await supabase.from('profiles').select('status,is_admin').eq('id', data.user.id).single();
 
-  if (!profile) return showError('Profile not found. Please sign up.');
-  if (profile.status === 'pending') return showError('⏳ Account under review. Please wait for approval.');
-  if (profile.status === 'blocked') return showError('🚫 Account blocked. Contact support.');
-  if (profile.status === 'rejected') return showError('❌ Application rejected.');
+    if (!profile) return showError('Profile not found. Please sign up.');
+    if (profile.status === 'pending') return showError('⏳ Account under review. Please wait for approval.');
+    if (profile.status === 'blocked') return showError('🚫 Account blocked. Contact support.');
+    if (profile.status === 'rejected') return showError('❌ Application rejected.');
 
-  // Redirect
-  window.location.href = profile.is_admin ? 'admin.html' : 'dashboard.html';
+    // Redirect
+    window.location.href = profile.is_admin ? 'admin.html' : 'dashboard.html';
+  } catch (e) {
+    return showError('Login failed: ' + (e.message || 'Network error'));
+  }
 }
