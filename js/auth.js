@@ -12,11 +12,15 @@ function showError(msg) {
 }
 
 async function googleSignup() {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin + '/pages/signup.html?google=1' }
-  });
-  if (error) showError(error.message);
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/pages/signup.html?google=1' }
+    });
+    if (error) showError(error.message);
+  } catch (e) {
+    showError('Google login is not enabled yet. Please use email & password.');
+  }
 }
 
 // Block disposable/temporary email domains (like LegendJournal)
